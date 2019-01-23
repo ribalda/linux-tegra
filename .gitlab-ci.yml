@@ -1,0 +1,24 @@
+image: "registry.gitlab.com/qtec/software/images/kernel-aarch64:latest"
+variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+        CROSS_COMPILE: aarch64-linux-gnu-
+        ARCH: arm64
+build:
+        script:
+                - touch .scmversion
+                - make qt5507_defconfig
+                - make -j8
+                - INSTALL_MOD_PATH=${PWD}/dist/ make -j8 modules_install firmware_install
+                - make INSTALL_HDR_PATH=${PWD}/dist/ -j8 headers_install
+                - cp arch/arm64/boot/Image vmlinux dist/
+        artifacts:
+                expire_in: 1 mos
+                paths:
+                        - dist/
+checkpatch:
+        script:
+                - git diff origin/master | scripts/checkpatch.pl --ignore=FILE_PATH_CHANGES
+        except:
+                - master
+        allow_failure: true
+
